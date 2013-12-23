@@ -1,6 +1,2 @@
-<path d="m0,100"/>
-<path d="m-0,-100"/>
-<path d="m0.43,1.43"/>
-<path d="m.43,.43"/>
-<path d="m-0.43,-1.43"/>
-<path d="m-.43,-.43"/>
+<path some="stuff" d="m0,1l2,3l4,5l6,7" regex="derp"/>
+<rect foo="bar" x="-20" y="-32.0" width="-.032" height="-43.32" lol="-42" nfjskd="-fsda.0,"/>

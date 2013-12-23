@@ -23,7 +23,7 @@ res_rect = {}
 tokens = (
     'TAG_OPEN', 'TAG_CLOSE',
     'PATH', 'RECT',
-    'D', 'M', 'C', 'L', 'Z',
+    'D', 'M', 'L', 'Z',
     'HEIGHT', 'WIDTH', 'X', 'Y',
     'OTHERARG',
     'COMMA',
@@ -53,22 +53,6 @@ def t_D(t):
     r'd='
     return t
 
-def t_M(t):
-    r'm'
-    return t
-
-def t_C(t):
-    r'c'
-    return t
-
-def t_L(t):
-    r'l'
-    return t
-
-def t_Z(t):
-    r'z'
-    return t
-
 def t_HEIGHT(t):
     r'height='
     return t
@@ -86,7 +70,20 @@ def t_Y(t):
     return t
 
 def t_OTHERARG(t):
-    r'[a-z\-]+=".*"'
+    # r'[a-z\-]+=".*"'
+    r'[a-z\-]+="[a-zA-Z0-9 \-\.\,]*"'
+    return t
+
+def t_M(t):
+    r'm'
+    return t
+
+def t_L(t):
+    r'l'
+    return t
+
+def t_Z(t):
+    r'z'
     return t
 
 def t_COMMA(t):
@@ -100,7 +97,7 @@ def t_QUOTES(t):
 def t_NUMBER(t):
     r'-?([0-9]*\.[0-9]+|[0-9]+)'
     try:
-        t.value = int(t.value)
+        t.value = float(t.value)
     except ValueError:
         t.value = 0
     return t
@@ -139,23 +136,24 @@ def p_path_tag_content(t):
 
 def p_path_tag_content_other(t):
     '''path_tag_content : OTHERARG
-                       | OTHERARG path_tag_content'''
-    pass
+                        | OTHERARG path_tag_content'''
+    print t[1]
 
-def p_path_def_m(t):
-    '''path_def : M NUMBER COMMA NUMBER
-                | M NUMBER COMMA NUMBER path_def'''
-    pass
+def p_path_def_m0(t):
+    'path_def : M NUMBER COMMA NUMBER'
+    res_path["path"] = [(t[2], t[4])]
 
-def p_path_def_c(t):
-    '''path_def : C NUMBER COMMA NUMBER NUMBER COMMA NUMBER NUMBER COMMA NUMBER path_def
-                | C NUMBER COMMA NUMBER NUMBER COMMA NUMBER NUMBER COMMA NUMBER'''
-    pass
+def p_path_def_m1(t):
+    'path_def : M NUMBER COMMA NUMBER path_def'''
+    res_path["path"] = [(t[2], t[4])] + t[5]
 
-def p_path_def_l(t):
-    '''path_def : L NUMBER COMMA NUMBER path_def
-                | L NUMBER COMMA NUMBER'''
-    pass
+def p_path_def_l0(t):
+    'path_def : L NUMBER COMMA NUMBER'
+    t[0] = [(t[2], t[4])]
+
+def p_path_def_l1(t):
+    'path_def : L NUMBER COMMA NUMBER path_def'
+    t[0] = [(t[2], t[4])] + t[5]
 
 def p_path_def_z(t):
     'path_def : Z'
@@ -165,22 +163,22 @@ def p_path_def_z(t):
 def p_rect_tag_content_x(t):
     '''rect_tag_content : X QUOTES NUMBER QUOTES
                         | X QUOTES NUMBER QUOTES rect_tag_content'''
-    pass
+    res_rect["x"] = t[3]
 
 def p_rect_tag_content_y(t):
     '''rect_tag_content : Y QUOTES NUMBER QUOTES
                         | Y QUOTES NUMBER QUOTES rect_tag_content'''
-    pass
+    res_rect["y"] = t[3]
 
 def p_rect_tag_content_width(t):
     '''rect_tag_content : WIDTH QUOTES NUMBER QUOTES
                         | WIDTH QUOTES NUMBER QUOTES rect_tag_content'''
-    pass
+    res_rect["width"] = t[3]
 
 def p_rect_tag_content_height(t):
     '''rect_tag_content : HEIGHT QUOTES NUMBER QUOTES
                         | HEIGHT QUOTES NUMBER QUOTES rect_tag_content'''
-    pass
+    res_rect["height"] = t[3]
 
 def p_rect_tag_content_other(t):
     '''rect_tag_content : OTHERARG
@@ -206,6 +204,9 @@ out_file = open(sys.argv[2], "w")
 status = True
 for i in in_file:
     yacc.parse(i)
+
+print res_path
+print res_rect
 
 # Close the files
 in_file.close()
