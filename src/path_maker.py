@@ -295,12 +295,11 @@ def createObsMatrix(path, rect, variance):
 """ Main """
 
 # Take arguments
-if len(sys.argv) != 3:
-    print "Usage: path_maker input_file output_file"
+if len(sys.argv) != 2:
+    print "Usage: path_maker input_file"
     exit()
 
 in_file = open(sys.argv[1], "r")
-out_file = open(sys.argv[2], "w")
 
 # Main loop for parser
 status = True
@@ -318,7 +317,6 @@ print createMarkovChain(res_path["path"], 0.9)
 print "Observations"
 print createObsMatrix(res_path["path"], res_rect, 1)
 
-# Close the files
+# Close the file
 in_file.close()
-out_file.close()
 
