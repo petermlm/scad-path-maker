@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 """
 Pedro Melgueira - m11153
 ------------------------
@@ -10,7 +8,6 @@ data structure convenient to test the first part of the SCAD course,
 which deals with the use of HMMs.
 """
 
-import sys
 import ply.lex as lex
 import ply.yacc as yacc
 import math
@@ -294,29 +291,19 @@ def createObsMatrix(path, rect, variance):
 
 """ Main """
 
-# Take arguments
-if len(sys.argv) != 2:
-    print "Usage: path_maker input_file"
-    exit()
+def generateMatrices(file_name):
+    in_file = open(file_name, "r")
 
-in_file = open(sys.argv[1], "r")
+    # Main loop for parser
+    for i in in_file:
+        yacc.parse(i)
 
-# Main loop for parser
-status = True
-for i in in_file:
-    yacc.parse(i)
+    # Make matrices
+    mc = createMarkovChain(res_path["path"], 0.9)
+    om = createObsMatrix(res_path["path"], res_rect, 1)
 
-print "Parsed Information"
-print res_path
-print res_rect
+    # Close the file
+    in_file.close()
 
-# Make matrices
-print "Markov Chain"
-print createMarkovChain(res_path["path"], 0.9)
-
-print "Observations"
-print createObsMatrix(res_path["path"], res_rect, 1)
-
-# Close the file
-in_file.close()
+    return mc, om
 
