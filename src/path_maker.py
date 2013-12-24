@@ -5,7 +5,7 @@ Pedro Melgueira - m11153
 This program parses a file containing one rect and one path SVG
 elements. After the parsing the information is processed to output a
 data structure convenient to test the first part of the SCAD course,
-which deals with the use of HMMs.
+at UE, which deals with the use of HMMs.
 """
 
 import ply.lex as lex
@@ -116,12 +116,12 @@ lex.lex()
 
 """ Rules """
 
-# Tags
 def p_line(t):
     '''line : tag
             | '''
     pass
 
+# Tags
 def p_path_tag(t):
     'tag : TAG_OPEN PATH path_tag_content TAG_CLOSE'
 
@@ -206,24 +206,29 @@ def createMarkovChain(path, trans_prob):
 """ Create Observations Matrix """
 
 def createObsMatrix(path, rect, variance):
+    res = []
     init_point = path[0]
     loop_list = path[1:] + [init_point]
 
-    lp = init_point
-
-    res = []
-
+    # Function that takes the coords of two points and calculates the distance
+    # between the two
     def dist(x1, x2, y1, y2):
         return math.sqrt((x2-x1)**2 + (y2-y1)**2)
 
+    # The error distribution for the sensor. (Made by... hand...)
+    error = np.array([1.0, 2.0, 5.0, 25.0, 100.0, 25.0, 5.0, 2.0, 1.0])
+    error = error / sum(error)
+
+    # loop through the points, use lp as last point in calculations
+    lp = init_point
     for i in loop_list:
-        # Get bot orientation
+        # Get current orientation
         d = dist(lp[0], i[0], lp[1], i[1])
         a_cos = math.acos((i[0]-lp[0]) / d)
         a_sin = math.asin((i[1]-lp[1]) / d)
         orientation = a_cos if a_sin >= 0 else 2*math.pi - a_cos
 
-        # Get Intersections
+        # Get Intersections with walls
         if i[0]-lp[0] == 0:
             x_up = x_dn = None
             y_up = (i[0], rect["height"])
@@ -243,7 +248,7 @@ def createObsMatrix(path, rect, variance):
             y_up = ((rect["height"]-b) / m, rect["height"])
             y_dn = ((rect["y"]-b) / m,      rect["y"])
 
-        # half of section
+        # Get the half point of section
         sec_half = ((i[0] + lp[0]) / 2.0, (i[1] + lp[1]) / 2.0)
 
         # Calc distance from half of section to walls
@@ -271,6 +276,7 @@ def createObsMatrix(path, rect, variance):
         else:
             last_dist = x_dist if x_dist < y_dist else y_dist
 
+        # The distance should only be between the lower and upper bounds
         if last_dist < 10:
             last_dist = 10.0
         elif last_dist > 100:
@@ -278,10 +284,7 @@ def createObsMatrix(path, rect, variance):
 
         # Make array of observations
         obs_arr = [0.0] * 9
-        index = int(last_dist / 10) - 1
-        obs_arr[index] = 1.0
-        error = np.array([1.0, 2.0, 4.0, 7.0, 13.0, 7.0, 4.0, 2.0, 1.0])
-        error = error / sum(error)
+        obs_arr[int(last_dist / 10) - 1] = 1.0
         res.append(np.convolve(error, obs_arr, mode="same"))
 
         # Next step
@@ -291,6 +294,7 @@ def createObsMatrix(path, rect, variance):
 
 """ Main """
 
+# Returns the Markov Chain and the Observation Model for the given arguments
 def generateMatrices(file_name):
     in_file = open(file_name, "r")
 
