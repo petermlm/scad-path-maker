@@ -13,6 +13,8 @@ which deals with the use of HMMs.
 import sys
 import ply.lex as lex
 import ply.yacc as yacc
+import math
+import numpy as np
 
 """ Parsed Information Will Go Here """
 
@@ -20,6 +22,7 @@ res_path = {}
 res_rect = {}
 
 """ Tokens """
+
 tokens = (
     'TAG_OPEN', 'TAG_CLOSE',
     'PATH', 'RECT',
@@ -79,7 +82,7 @@ def t_M(t):
     return t
 
 def t_L(t):
-    r'l'
+    r'L'
     return t
 
 def t_Z(t):
@@ -137,7 +140,7 @@ def p_path_tag_content(t):
 def p_path_tag_content_other(t):
     '''path_tag_content : OTHERARG
                         | OTHERARG path_tag_content'''
-    print t[1]
+    pass
 
 def p_path_def_m0(t):
     'path_def : M NUMBER COMMA NUMBER'
@@ -190,6 +193,105 @@ def p_error(t):
 
 yacc.yacc()
 
+""" Create Markov Chain """
+
+def createMarkovChain(path, trans_prob):
+    res = []
+
+    for i in range(len(path)):
+        l = [0.0] * len(path)
+        l[i] = 1 - trans_prob
+        l[(i-1) % len(path)] = trans_prob
+        res.append(l)
+
+    return np.array(res)
+
+""" Create Observations Matrix """
+
+def createObsMatrix(path, rect, variance):
+    init_point = path[0]
+    loop_list = path[1:] + [init_point]
+
+    lp = init_point
+
+    res = []
+
+    def dist(x1, x2, y1, y2):
+        return math.sqrt((x2-x1)**2 + (y2-y1)**2)
+
+    for i in loop_list:
+        # Get bot orientation
+        d = dist(lp[0], i[0], lp[1], i[1])
+        a_cos = math.acos((i[0]-lp[0]) / d)
+        a_sin = math.asin((i[1]-lp[1]) / d)
+        orientation = a_cos if a_sin >= 0 else 2*math.pi - a_cos
+
+        # Get Intersections
+        if i[0]-lp[0] == 0:
+            x_up = x_dn = None
+            y_up = (i[0], rect["height"])
+            y_dn = (i[0], rect["x"])
+
+        elif i[1]-lp[1] == 0:
+            x_up = (rect["width"], i[1])
+            x_dn = (rect["x"], i[1])
+            y_up = y_dn = None
+
+        else:
+            m = (i[1]-lp[1]) / (i[0]-lp[0])
+            b = i[1] - m * i[0]
+
+            x_up = (rect["width"],          rect["width"] * m + b)
+            x_dn = (rect["x"],              rect["x"] * m + b)
+            y_up = ((rect["height"]-b) / m, rect["height"])
+            y_dn = ((rect["y"]-b) / m,      rect["y"])
+
+        # half of section
+        sec_half = ((i[0] + lp[0]) / 2.0, (i[1] + lp[1]) / 2.0)
+
+        # Calc distance from half of section to walls
+        x_dist = y_dist = -1
+        if orientation >= 0.0 and orientation < math.pi / 2.0:
+            if x_up != None: x_dist = dist(sec_half[0], x_up[0], sec_half[1], x_up[1])
+            if y_up != None: y_dist = dist(sec_half[0], y_up[0], sec_half[1], y_up[1])
+
+        elif orientation < math.pi:
+            if x_dn != None: x_dist = dist(sec_half[0], x_dn[0], sec_half[1], x_dn[1])
+            if y_up != None: y_dist = dist(sec_half[0], y_up[0], sec_half[1], y_up[1])
+
+        elif orientation < math.pi * (3.0 / 2.0):
+            if x_dn != None: x_dist = dist(sec_half[0], x_dn[0], sec_half[1], x_dn[1])
+            if y_dn != None: y_dist = dist(sec_half[0], y_dn[0], sec_half[1], y_dn[1])
+
+        else:
+            if x_up != None: x_dist = dist(sec_half[0], x_up[0], sec_half[1], x_up[1])
+            if y_dn != None: y_dist = dist(sec_half[0], y_dn[0], sec_half[1], y_dn[1])
+
+        if x_dist == -1:
+            last_dist = y_dist
+        elif y_dist == -1:
+            last_dist = x_dist
+        else:
+            last_dist = x_dist if x_dist < y_dist else y_dist
+
+        if last_dist < 10:
+            last_dist = 10.0
+        elif last_dist > 100:
+            last_dist = 100.0
+
+        # Make array of observations
+        obs_arr = [0.0] * 9
+        index = int(last_dist / 10) - 1
+        obs_arr[index] = 1.0
+        error = np.array([1.0, 2.0, 4.0, 7.0, 13.0, 7.0, 4.0, 2.0, 1.0])
+        error = error / sum(error)
+        res.append(np.convolve(error, obs_arr, mode="same"))
+
+        # Next step
+        lp = i
+
+    return np.array(res).T
+
 """ Main """
 
 # Take arguments
@@ -205,8 +307,16 @@ status = True
 for i in in_file:
     yacc.parse(i)
 
+print "Parsed Information"
 print res_path
 print res_rect
+
+# Make matrices
+print "Markov Chain"
+print createMarkovChain(res_path["path"], 0.9)
+
+print "Observations"
+print createObsMatrix(res_path["path"], res_rect, 1)
 
 # Close the files
 in_file.close()
