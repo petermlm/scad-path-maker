@@ -2,10 +2,12 @@
 Pedro Melgueira - m11153
 ------------------------
 
-This program parses a file containing one rect and one path SVG
-elements. After the parsing the information is processed to output a
-data structure convenient to test the first part of the SCAD course,
-at UE, which deals with the use of HMMs.
+This program parses a file containing one rect and one path SVG elements.
+After the parsing, the information is processed to output a data
+structure convenient to test the first part of the SCAD course's project
+at UE, which deals with the use of HMMs. That output is composed of a Markov
+Chain matrix and an Observation matrix, following the conventions used during
+the classes.
 """
 
 import ply.lex as lex

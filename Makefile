@@ -3,5 +3,5 @@ all:
 	cd src && ./test_path_maker.py ../testfiles/img2.svg
 
 clean:
-	cd src && rm parser.out parsetab.py parsetab.pyc
+	cd src && rm parser.out parsetab.py *.pyc
 
