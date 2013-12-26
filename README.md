@@ -28,5 +28,17 @@ print om
 
 The function **generateMatrices(file\_name)** takes one argument which is the name of the file that contains one SVG *path* element and one SVG *rect* element.
 
-Note that the *path* element can only be defined using the *L* instruction as defined by the [W3C recommendation](http://www.w3.org/TR/2000/CR-SVG-20001102/paths.html#PathDataLinetoCommands). The other instructions were not implemented.
+
+# Input
+
+The input should be a file containing only one *path* element and one *rect* element, like in the following example.
+
+```svg
+<path d="m10,10L20,40L90,40L90,20z"/>
+<rect x="0" y="0" width="100" height="50"/>
+```
+
+The rectangle will be the wall described in the project, where the robot will walk. The path will be the one that the robot will follow.
+
+As of this version, the script can only parse files that use the *L* instruction as defined by the [W3C recommendation](http://www.w3.org/TR/2000/CR-SVG-20001102/paths.html#PathDataLinetoCommands). The other instructions were not implemented.
 
