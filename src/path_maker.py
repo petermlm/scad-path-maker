@@ -159,7 +159,7 @@ def p_path_def_l1(t):
 
 def p_path_def_z(t):
     'path_def : Z'
-    pass
+    t[0] = []
 
 # Rect tag content
 def p_rect_tag_content_x(t):
@@ -281,13 +281,15 @@ def createObsMatrix(path, rect, variance):
         # The distance should only be between the lower and upper bounds
         if last_dist < 10:
             last_dist = 10.0
-        elif last_dist > 100:
-            last_dist = 100.0
+        elif last_dist > 99:
+            last_dist = 99.0
 
         # Make array of observations
         obs_arr = [0.0] * 9
         obs_arr[int(last_dist / 10) - 1] = 1.0
-        res.append(np.convolve(error, obs_arr, mode="same"))
+        c_res = np.convolve(obs_arr, error, mode="same")
+        c_res = c_res / sum(c_res)
+        res.append(c_res)
 
         # Next step
         lp = i
