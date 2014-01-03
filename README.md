@@ -28,6 +28,16 @@ print om
 
 The function **generateMatrices(file\_name)** takes one argument which is the name of the file that contains one SVG *path* element and one SVG *rect* element.
 
+Using the return of that function you can then use a path generator **makeRandObsSeq(mc, ob, obs_size)**. This function will take the markov chain, the observation model and a integer as the size of the ibservations and it will make a random walk through the circuit. Use as in the following example:
+
+```python
+# test_path_maker.py
+import sys
+from path_maker import generateMatrices, makeRandObsSeq
+
+mc, om = generateMatrices(sys.argv[1])
+seq = makeRandObsSeq(mc, om, 100)
+```
 
 # Input
 
