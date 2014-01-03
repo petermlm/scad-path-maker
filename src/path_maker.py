@@ -14,6 +14,7 @@ import ply.lex as lex
 import ply.yacc as yacc
 import math
 import numpy as np
+from random import randint, random
 
 """ Parsed Information Will Go Here """
 
@@ -314,4 +315,29 @@ def generateMatrices(file_name):
     in_file.close()
 
     return mc, om
+
+def makeRandObsSeq(mc, ob, obs_size):
+    obs_sec = []
+
+    # Start in any state
+    cstate = randint(0, len(mc)-1)
+
+    # Walk through the path and take a few measurements
+    for i in range(obs_size):
+        # Make random state transition
+        r = random()
+        if r >= 0.1:
+            cstate = (cstate+1) % len(mc)
+
+        # Make observation
+        r = random()
+        s = 0.0
+        for j in range(len(ob[:,cstate])):
+            s += ob[j, cstate]
+            if s > r:
+                obs_sec.append(j)
+                break
+
+    # Return
+    return obs_sec
 

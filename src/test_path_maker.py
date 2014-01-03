@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import sys
-from path_maker import generateMatrices
+from path_maker import generateMatrices, makeRandObsSeq
 
 # Take arguments
 if len(sys.argv) != 2:
@@ -11,4 +11,5 @@ if len(sys.argv) != 2:
 mc, om = generateMatrices(sys.argv[1])
 print mc
 print om
+print makeRandObsSeq(mc, om, 100)
 
