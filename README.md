@@ -9,6 +9,12 @@ the classes.
 
 # How to Use
 
+Make sure you have the python-ply package installed to use this module. If not do the following on Ubuntu machines:
+
+```
+sudo apt-get install python-ply
+```
+
 Just include the module **path\_maker.py** and use the function **generateMatrices(file\_name)**. Take the following code as an example:
 
 ```python
